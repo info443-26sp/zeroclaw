@@ -109,3 +109,30 @@ zeroclaw/
 └── .github/workflows/      # Automated build and test configuration
 ```
 
+## Applied Perspective
+
+## Styles & Patterns
+
+## Architectural Assessment
+
+### Dependency Inversion Principle (DIP)
+
+ZeroClaw adheres to the Dependency Inversion Principle through the `zeroclaw-api` crate, which sits at the bottom of the dependency graph (see **Figure 1**) and defines only abstract trait interfaces: `Provider`, `Channel`, `Tool`, `Memory`, `Observer`, and `Peripheral`. The agent runtime (`zeroclaw-runtime`) depends just on these traits. It never imports a concrete Anthropic client, a Discord bot library, or a specific search engine implementation. Concrete providers, channels, and tools implement the relevant traits and are registered at startup via factory functions, which the runtime queries through a registry rather than through hard-coded references.
+
+This inverts the typical dependency direction: the high-level agent loop (policy) does not import low-level API clients (details). Instead, both depend on the abstract interfaces in `zeroclaw-api`. A practical consequence is that swapping from OpenAI to Ollama requires changing the configuration file, not any code in the runtime.
+
+### Open-Closed Principle (OCP)
+
+ZeroClaw adheres to the Open-Closed Principle across all four extension points defined in the API crate. Adding a new messaging platform requires creating a new struct that implements the `Channel` trait and registering it in the channel factory. The runtime, security subsystem, and all other existing code remain untouched, as they reference channels only through the trait interface. The same pattern applies to providers, tools, and memory backends.
+
+This is enforced by the architecture boundary rules in AGENTS.md: extension crates must register via factory functions and must never modify runtime code. A contributor adding a new channel never needs to edit `zeroclaw-runtime`. The core is closed to modification while the extension surface is open. Feature flags further support this by letting users compile only the extensions they need without changing the system's logic.
+
+### Encapsulation
+
+ZeroClaw enforces encapsulation at three levels.
+
+1. At the **crate boundary**, each crate exposes only a public API through its `lib.rs` file. Internal submodules, helper functions, and implementation details are kept private. For example, `zeroclaw-providers` exposes a factory function and the `Provider` trait implementation, but the individual HTTP client logic for Anthropic, OpenAI, and Ollama are internal modules that callers cannot import.
+
+2. At the **trait boundary**, concrete types are never exposed to callers. The runtime holds `Arc<dyn Provider>` references, as in it never sees the concrete AnthropicClient struct. This means the internals of AnthropicClient (connection pooling, retry logic, token counting) can be refactored entirely without any change to the runtime.
+
+3. At the **module level** within crates, submodules follow the same pattern. For instance, `zeroclaw-runtime/src/security/` contains policy enforcement, sandbox detection, and emergency stop logic, all of which are internal to the security subsystem and invisible to the rest of the runtime.
