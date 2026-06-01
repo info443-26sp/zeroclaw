@@ -10,7 +10,7 @@ From a user perspective, ZeroClaw is an AI agent runtime that runs entirely on y
 
 The project was originally created by Argenis De La Rosa (GitHub: @theonlyhennygod) along with the Sundai community. It is a Rust reimplementation of the OpenClaw concept by Peter Steinburg, optimized for performance, memory efficiency, and minimal binary size. ZeroClaw is an open-source community project. The project lead is Jordan (@JordanTheJet), and the core maintainers are @WareWolf-MoonWall (governance and docs) and @singlerider (runtime and providers). Significant changes to the project go through an RFC process requiring a two-thirds majority vote from the maintainers, so there is structured governance around architectural decisions.
 
-Using the following links below are provided to learn more about Zeroclaw:
+The following links provide more information about ZeroClaw:
 
 ## The GitHub repository:
 https://github.com/zeroclaw-labs/zeroclaw 
@@ -171,4 +171,4 @@ ZeroClaw enforces encapsulation at three levels.
 
 2. At the **trait boundary**, concrete types are never exposed to callers. The runtime holds `Arc<dyn Provider>` references, as in it never sees the concrete AnthropicClient struct. This means the internals of AnthropicClient (connection pooling, retry logic, token counting) can be refactored entirely without any change to the runtime.
 
-3. At the **module level** within crates, submodules follow the same pattern. For instance, `zeroclaw-runtime/src/security/` contains policy enforcement, sandbox detection, and emergency stop logic, all of which are internal to the security subsystem and invisible to the rest of the runtime.## Applied Perspective
+3. At the **module level** within crates, submodules follow the same pattern. For instance, `zeroclaw-runtime/src/security/` contains policy enforcement, sandbox detection, and emergency stop logic, all of which are internal to the security subsystem and invisible to the rest of the runtime.
