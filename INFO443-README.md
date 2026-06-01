@@ -111,6 +111,16 @@ zeroclaw/
 
 ## Applied Perspective
 
+This section discusses ZeroClaw's architecture from an evolution perspective, which analyzes the ability of ZeroClaw's architecture to withstand internal and external pressures. While ZeroClaw itself is an evolution from OpenClaw, in an AI landscape that is constantly evolving, ZeroClaw must continue to adapt to the latest trends to ensure that it stays viable. We will primarily focus on the modifiability and reliability of change within ZeroClaw's architecture and examine how it is designed to accommodate major changes in its environment.
+
+### Concerns
+
+1. **Dimensions of Change:** Integration evolution is prominant within ZeroClaw's architecture since it uses a large variety of different channels, tools, providers, and other key systems. As new models and tools are released, these integrations will be expected to evolve alongside these constant changes, making integration evolution a key concern for ZeroClaw's architecture. 
+
+2. **Changes Due to External Factors:** ZeroClaw is subject to constant external pressures such as LLMs or APIs becoming deprecated, changes being made to APIs, and new platforms emerging, which makes adapting to these external pressures a key concern for ZeroClaw staying viable. 
+
+3. **Reliability of Change:** ZeroClaw's reliance on a small team and an open-source community can lead to concerns with the reliability and consistency made to the system over time. As the project grows and more contributors get involved, maintaining a consistent process for these changes is crucial. 
+
 ## Styles & Patterns
 
 ## Architectural Assessment
