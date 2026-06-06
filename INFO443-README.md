@@ -22,7 +22,7 @@ https://github.com/zeroclaw-labs/zeroclaw/tree/master/docs
 
 This section describes ZeroClaw's architecture from a software development perspective. We identify the modules that make up the system, how they are organized and depend on one another, and how the code is structured, tested, built, and configured.
 
-> **Rust terminology note:** A *crate* is a Rust package of code (like a library in other languages). A *workspace* is a collection of related crates developed together in one repository. *Cargo* is Rust's build tool and package manager (similar to `npm` for Node.js or `pip` for Python). *TOML* is a configuration file format (similar to YAML or JSON). *Feature flags* are compile-time switches that include or exclude optional functionality.
+> **Rust terminology:** A *crate* is a Rust package of code (like a library in other languages). A *workspace* is a collection of related crates developed together in one repository. *Cargo* is Rust's build tool and package manager (similar to `npm` for Node.js or `pip` for Python). *TOML* is a configuration file format (similar to YAML or JSON). *Feature flags* are compile-time switches that include or exclude optional functionality.
 
 ### Module Organization
 
@@ -59,9 +59,9 @@ ZeroClaw has 22 workspace members. The 17 main application crates live under the
 
 To visualize how these components relate, **Figure 1** maps every crate to its layer and shows the dependency flow between them. The diagram is the primary reference for understanding ZeroClaw's module structure.
 
-![Figure 1: ZeroClaw Module Layer Diagram](/images/ZeroClaw_System_Architecture_Diagram.svg)
+![Figure 1: ZeroClaw Module Layer Diagram](/images/ZeroClaw_System_Architecture_Diagram_Updated.svg)
 
-*Figure 1: ZeroClaw Module Layer Diagram. Each box is a crate grouped into one of four layers (Application, Edge, Support, Foundation). Solid arrows indicate required dependencies (A → B means "A depends on B").*
+*Figure 1: ZeroClaw Module Layer Diagram. Each box is a crate grouped into one of four layers (Application, Edge, Support, Foundation). Solid arrows indicate required dependencies (A → B means "A depends on B"). Dashed arrows indicate optional dependencies compiled only when the corresponding feature is enabled.*
 
 **Dependency rules:**
 
@@ -75,6 +75,25 @@ To visualize how these components relate, **Figure 1** maps every crate to its l
 |------|---------|--------|
 | Beta | Safe to use; breaking changes are documented in release notes | `zeroclaw-config`, `zeroclaw-log`, `zeroclaw-infra`, `zeroclaw-providers`, `zeroclaw-memory`, `zeroclaw-macros`, `zeroclaw-tool-call-parser` |
 | Experimental | May change without notice; not yet stable | `zeroclaw-runtime`, `zeroclaw-channels`, `zeroclaw-gateway`, `zeroclaw-tools`, `zeroclaw-tui`, `zeroclaw-plugins`, `zeroclaw-hardware`, `zeroclaw-api` |
+
+#### External Dependencies
+
+Several crates communicate with external systems outside the Rust codebase:
+
+| Crate | External dependency | Purpose |
+|-------|-------------------|---------|
+| `zeroclaw-providers` | Anthropic, OpenAI, Ollama, Azure, Google, OpenRouter APIs | Sends prompts and receives LLM responses |
+| `zeroclaw-channels` | Discord, Telegram, Slack, email (SMTP/IMAP) APIs | Sends and receives messages on each platform |
+| `zeroclaw-memory` | SQLite, filesystem | Persists conversation history and embeddings |
+| `zeroclaw-tools` | System shell, HTTP, filesystem | Executes commands, web searches, file operations |
+| `zeroclaw-gateway` | HTTP, WebSocket | Exposes external REST API |
+| `zeroclaw-plugins` | WASM runtime | Loads and executes plug-in binaries |
+| `zeroclaw-hardware` | USB, I2C, SPI, GPIO | Communicates with peripheral hardware |
+| `aardvark-sys` | USB, I2C (Aardvark adapter) | Low-level hardware bridge |
+| `robot-kit` | Serial (Nucleo board) | Robot control commands |
+| `zeroclaw-log`, `zeroclaw-config` | Filesystem | Reads config files, writes log output |
+
+All external dependencies are runtime-only; the compilation process requires no internet access. Many of them are optional and compiled only when the corresponding Cargo feature flag is enabled.
 
 ### Codeline Organization
 
@@ -172,3 +191,5 @@ ZeroClaw enforces encapsulation at three levels.
 2. At the **trait boundary**, concrete types are never exposed to callers. The runtime holds `Arc<dyn Provider>` references, as in it never sees the concrete AnthropicClient struct. This means the internals of AnthropicClient (connection pooling, retry logic, token counting) can be refactored entirely without any change to the runtime.
 
 3. At the **module level** within crates, submodules follow the same pattern. For instance, `zeroclaw-runtime/src/security/` contains policy enforcement, sandbox detection, and emergency stop logic, all of which are internal to the security subsystem and invisible to the rest of the runtime.
+
+## References
