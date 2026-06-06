@@ -128,6 +128,46 @@ zeroclaw/
 └── .github/workflows/      # Automated build and test configuration
 ```
 
+#### Build System
+
+The project uses Cargo with five build profiles, each optimized for a different scenario:
+
+| Profile | When to use | What it optimizes for |
+|---------|-------------|----------------------|
+| `dev` | Daily development | Fast compile time |
+| `release` | Shipping to users | Small file size, fast runtime |
+| `release-fast` | Local test builds | Balance of size and speed |
+| `ci` | Automated testing | Speed across parallel builds |
+| `dist` | Distribution artifacts | Smallest possible file size |
+
+**CI/CD pipeline.** Every push and pull request triggers a multi-stage pipeline in GitHub Actions:
+
+1. **Lint.** Runs `cargo fmt --check` for code style and `cargo clippy` for common bugs and anti-patterns. Both must pass or the build fails.
+2. **Build.** Compiles all crates across multiple profiles (dev, ci) and platforms (Windows, macOS, Linux). Feature combinations (default, all features, no features) are tested in parallel.
+3. **Test.** Runs all unit, component, and integration tests with code coverage tracking. If any test fails, the pipeline stops.
+4. **Audit.** Scans dependencies for known security vulnerabilities using `cargo audit`. Commits with vulnerable dependencies are rejected.
+5. **Post-merge release.** When code lands on the master branch, the pipeline generates build artifacts (compiled binaries, package archives) and publishes them to the project's GitHub Releases page with auto-generated release notes.
+
+### Testing
+
+Testing is organized into five levels, each testing a different boundary:
+
+| Level | What it tests | What's real vs. simulated |
+|-------|--------------|--------------------------|
+| Unit | A single function | Everything else is simulated |
+| Component | One crate in isolation | Neighboring crates are simulated |
+| Integration | Several crates working together | Only external services (APIs, databases) are simulated |
+| System | Full application from start to finish | Only internet-facing services are simulated |
+| Live | Full application with real services | Nothing is simulated — runs against real accounts and costs real money |
+
+The project provides shared testing tools including mock AI providers that return scripted responses, mock tools with controlled behavior, and test channels that capture outgoing messages. Complex test scenarios are defined as declarative JSON trace fixtures that describe a conversation as a series of turns, where each turn contains LLM response steps and a set of expected outcomes, replacing inline mock setup with reusable scripts verified automatically. A dedicated `test_architecture.rs` suite uses static analysis to detect duplicate state across the codebase, failing the build if any is discovered, enforcing this invariant automatically rather than relying on developer discipline. All test levels except Live run automatically on every code change through the continuous integration (CI) system; Live tests require real API credentials and must be run manually.
+
+### Configuration
+
+All user settings live in a single TOML configuration file. This file controls which AI provider to use (Anthropic, OpenAI, Ollama, or others), which messaging platforms to connect to, security and autonomy settings, memory storage options, and tool permissions. API keys and other secrets are encrypted before being saved to disk. Every crate reads its configuration through a standardized system that validates all settings at startup. This ensures that if a setting is invalid or missing, the system reports the error immediately rather than failing later at an unpredictable point. 
+
+The config file carries a schema version field, and when the system loads an older file it runs a migration step that transforms the file to match the current schema before validation, allowing the configuration format to evolve across releases without breaking existing user setups. Optional capabilities are gated behind Cargo feature flags at the workspace level. For example, hardware peripherals are compiled only when the `hardware` feature is enabled, and WASM plugin support is compiled only when the `plugins` feature is enabled. This keeps the default binary small while letting users add capabilities as needed.
+
 ## Applied Perspective
 
 This section discusses ZeroClaw's architecture from an evolution perspective, which analyzes the ability of ZeroClaw's architecture to withstand internal and external pressures. While ZeroClaw itself is an evolution from OpenClaw, in an AI landscape that is constantly evolving, ZeroClaw must continue to adapt to the latest trends to ensure that it stays viable. We will primarily focus on the modifiability and reliability of change within ZeroClaw's architecture and examine how it is designed to accommodate major changes in its environment.
