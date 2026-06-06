@@ -208,6 +208,10 @@ ZeroClaw uses the publish-subscribe pattern for observability. The agent runtime
 
 ZeroClaw uses the blackboard pattern through its `zeroclaw-memory` crate, which provides a shared knowledge store backed by Markdown files, SQLite, or vector embeddings depending on configuration. During a session, the runtime writes conversation turns and tool results to the memory backend; the `memory_loader` reads from it to inject relevant past context into each new LLM request. Neither component depends on the other directly — they both communicate through the shared store, keeping the agent loop and the memory system decoupled.
 
+**Adapter pattern** (`crates/zeroclaw-hardware/src/transport.rs`, `crates/zeroclaw-hardware/src/serial.rs`, `crates/zeroclaw-hardware/src/aardvark.rs`)
+
+ZeroClaw uses the adapter pattern in the hardware subsystem to unify communication with devices over different transport protocols. Hardware tools must send commands to physical devices using different protocols: USB serial for microcontrollers, I2C/SPI for an Aardvark adapter board, and mock transports for testing. Each transport protocol has its own native interface, so wiring every tool to every transport would create combinatorial conditional logic in each tool. The `Transport` trait defines a common interface with a single `send(cmd) -> response` method. Three adapters implement this trait: `HardwareSerialTransport` wraps serial port read/write calls, `AardvarkTransport` wraps the Aardvark C library's I2C/SPI functions, and `MockTransport` provides a test double that returns scripted responses. Hardware tools depend only on `Arc<dyn Transport>` and are completely decoupled from the specific wire protocol, allowing new transports to be added without modifying any tool code.
+
 ## Architectural Assessment
 
 ### Dependency Inversion Principle (DIP)
