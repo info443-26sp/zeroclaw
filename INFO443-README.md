@@ -1,9 +1,5 @@
 # INFO 443: Software Architecture Project 2
 
-## What is ZeroClaw?
-
-ZeroClaw (originally written by Argenis De La Rosa along with the Sundai community) is a more optimized version of OpenClaw, using Rust as the primary language to make the runtime highly efficient for autonomous AI agents. Due to it being written in Rust, the benefits include it being memory efficient, modular, and secure.
-
 ## Context and Background
 
 From a user perspective, ZeroClaw is an AI agent runtime that runs entirely on your own machine. You configure it with a single TOML file, point it at an LLM provider with your own API key, and it operates across messaging platforms (Discord, Telegram, email, etc.), executes shell commands and tools, and manages its own memory. Everything is local including your keys, your conversation history, your config. There is no cloud backend, no telemetry, and no license server. If you turn off the computer, the agent stops because it is running on your machine. It is designed to be a local runtime for autonomous AI agents, giving users full control over their data and interactions.
@@ -12,10 +8,10 @@ The project was originally created by Argenis De La Rosa (GitHub: @theonlyhennyg
 
 The following links provide more information about ZeroClaw:
 
-## The GitHub repository:
+### The GitHub repository:
 https://github.com/zeroclaw-labs/zeroclaw 
 
-## The official documentation:
+### The official documentation:
 https://github.com/zeroclaw-labs/zeroclaw/tree/master/docs
 
 ## Development View
@@ -185,7 +181,7 @@ This section examines ZeroClaw's architecture from the Evolution perspective (Ro
     
     Each of these external forces can break the system if changes are not contained. ZeroClaw addresses this through its trait-based plug-in architecture. When a provider API changes, only the crate implementing that particular provider needs to be updated. The runtime, all other providers, channels, and tools are unaffected. The dependency audit stage in CI uses `cargo audit` to catch vulnerable dependencies before they reach production.
 
-3. **Reliability of Change.** An open-source project with a small team of maintainers face a reliability challenge, where many contributors touch the codebase, but few have deep knowledge of every subsystem. Changes must be safe and reviewable without requiring full-system expertise. ZeroClaw addresses this through multiple approaches. The layered architecture with compiler-enforced dependency rules ensures that a change in one crate cannot accidentally affect unrelated crates. The CI pipeline runs linting, building, testing, and security auditing on every pull request. Architecture invariant tests in `test_architecture.rs` catch violations of the no-duplicate-state rule automatically. Stability tiers communicate the expected breaking-change risk of each crate, letting contributors know which areas are safe to modify and which require more care.
+3. **Reliability of Change.** An open-source project with a small team of maintainers faces a reliability challenge: many contributors touch the codebase, but few have deep knowledge of every subsystem. Changes must be safe and reviewable without requiring full-system expertise. ZeroClaw addresses this through multiple approaches. The layered architecture with compiler-enforced dependency rules ensures that a change in one crate cannot accidentally affect unrelated crates. The CI pipeline runs linting, building, testing, and security auditing on every pull request. Architecture invariant tests in `test_architecture.rs` catch violations of the no-duplicate-state rule automatically. Stability tiers communicate the expected breaking-change risk of each crate, letting contributors know which areas are safe to modify and which require more care.
 
 ### Applying the Perspective
 
