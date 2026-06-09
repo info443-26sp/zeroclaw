@@ -293,6 +293,14 @@ In the `Provider` trait implementation, providers such as `AnthropicModelProvide
 
 The LSP is also present within the `Memory` trait implementation, where `PostgresMemory`, `MarkdownMemory` and `SqliteMemory` are all valid substitutions at the same call sites in the agent loop. Even in the most extreme case with `NoneMemory` (which returns empty results), the substitution is still valid without any hidden dependencies on specific implementation interfering with the calling code.  
 
+### Single Responsibility Principle (SRP)
+
+ZeroClaw adheres to the Single Responsibility Principle at both the crate and module level. Each crate has one clearly scoped job: `zeroclaw-log` handles logging, `zeroclaw-config` handles reading and validating user settings, and `zeroclaw-memory` handles conversation storage. A change to how logs are written never touches configuration parsing, and a change to the memory backend never touches the agent loop.
+
+The clearest crate-level expression of SRP is the separation between `zeroclaw-tool-call-parser` and `zeroclaw-tools`. Parsing an LLM response into structured tool calls is one responsibility; executing those tools is another. The parser crate's own documentation states that it has "no dependency on agent state, memory, model_providers, or channels" and is "pure text transformation." If the LLM response format changes — for example, a new provider uses a different tool call envelope — only the parser crate needs to change. The tool implementations in `zeroclaw-tools` are entirely unaffected.
+
+Within crates, the same principle applies at the module level. `zeroclaw-config` separates its concerns into distinct files: `migration.rs` handles schema version upgrades, `secrets.rs` handles encryption and decryption of API keys, `validation_warnings.rs` reports invalid settings, and `schema.rs` defines the configuration structure. A change to how secrets are encrypted touches only `secrets.rs`. Similarly, `zeroclaw-tools` gives each tool its own file — `web_search_tool.rs`, `file_edit.rs`, `browser.rs`, and so on — so a change to how web search works never risks affecting file editing or browser control.
+
 ## References
 
 - Fowler, M. (2018, February 26). The Practical Test Pyramid. martinFowler.com. https://martinfowler.com/articles/practical-test-pyramid.html
