@@ -269,6 +269,12 @@ ZeroClaw adheres to the Open-Closed Principle across all four extension points d
 
 This is enforced by the architecture boundary rules in AGENTS.md: extension crates must register via factory functions and must never modify runtime code. A contributor adding a new channel never needs to edit `zeroclaw-runtime`. The core is closed to modification while the extension surface is open. Feature flags further support this by letting users compile only the extensions they need without changing the system's logic.
 
+### Interface Segregation Principle (ISP)
+
+ZeroClaw partly follows the Interface Segregation Principle through small traits, which are Rust's version of interfaces, like `Tool` and `Observer`. These traits are easy to work with because they only include the methods that each implementation needs.
+
+ZeroClaw does this less well with larger traits like `Channel`, `Memory`, and `ModelProvider`. These traits include many optional features, so a simple channel may still be connected to methods for drafts, reactions, approvals, pins, redaction, typing indicators, and streaming, even if it only sends and receives messages. This design makes the runtime easier to manage because it can use one trait for many cases, but it also makes some interfaces larger than they need to be.
+
 ### Encapsulation
 
 ZeroClaw enforces encapsulation at three levels.
