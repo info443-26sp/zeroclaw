@@ -279,6 +279,14 @@ ZeroClaw enforces encapsulation at three levels.
 
 3. At the **module level** within crates, submodules follow the same pattern. For instance, `zeroclaw-runtime/src/security/` contains policy enforcement, sandbox detection, and emergency stop logic, all of which are internal to the security subsystem and invisible to the rest of the runtime.
 
+### Liskov Substitution Principle (LSP)
+
+ZeroClaw adheres to the Liskov Substitution Principle through its trait-based architecture. The agent runtime holds `Arc<dyn Provider>`, `Arc<dyn Memory>` and similar references for each trait, which allows for implementations to be substituted without any calling code being changed. 
+
+In the `Provider` trait implementation, providers such as `AnthropicModelProvider` and `OpenAiModelProvider` all implement the same `chat()` interface and the agent calls `provider.chat()` regardless of which type is behind it. The agent also calls `ReliableModelProvider` identically to a bare provider, as the retry and fallback logic it wraps around another `Provider` is entirely invisible to the caller.
+
+The LSP is also present within the `Memory` trait implementation, where `PostgresMemory`, `MarkdownMemory` and `SqliteMemory` are all valid substitutions at the same call sites in the agent loop. Even in the most extreme case with `NoneMemory` (which returns empty results), the substitution is still valid without any hidden dependencies on specific implementation interfering with the calling code.  
+
 ## References
 
 - Fowler, M. (2018, February 26). The Practical Test Pyramid. martinFowler.com. https://martinfowler.com/articles/practical-test-pyramid.html
